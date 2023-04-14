@@ -74,6 +74,68 @@ module.exports = {
       },
     },
     {
+      resolve: 'gatsby-plugin-sitemap',
+      options: {
+        excludes: ['/zh-HK/404.html', '/zh-CN/404.html', '/en/404.html', '/zh-HK/404/', '/zh-CN/404/', '/en/404/'],
+        query: `{
+          site {
+            siteMetadata {
+              siteUrl
+            }
+          }
+          allSite {
+            nodes {
+              buildTime
+            }
+          }
+          allSitePage {
+            nodes {
+              path
+            }
+          }
+          allMdx {
+            edges {
+              node {
+                fields {
+                  slug
+                }
+                frontmatter {
+                  date
+                  languages
+                }
+              }
+            }
+             
+          }
+        }`,
+        resolvePages: ({ allSitePage: { nodes: sitePages }, allMdx: { edges: mdxPages }, allSite }) => {
+          return sitePages
+            .map((page) => {
+              const pageFile = mdxPages.find(({ node }) => {
+                let fileName
+                node?.frontmatter?.languages?.forEach((lang) => {
+                  fileName = `/${lang}${node?.fields?.slug}`
+                })
+                return page.path === fileName
+              })
+              if (pageFile) return { ...page, ...pageFile?.node?.frontmatter }
+              return { ...page, date: allSite?.nodes[0]?.buildTime }
+            })
+            .filter(
+              (page) =>
+                page.path.indexOf('/en/') > -1 || page.path.indexOf('/zh-HK/') > -1 || page.path.indexOf('/zh-CN/') > -1
+            )
+        },
+        serialize: ({ path, date }) => {
+          return {
+            url: path,
+            lastmod: date,
+          }
+        },
+        createLinkInHead: true,
+      },
+    },
+    {
       resolve: "gatsby-plugin-purgecss", // purges all unused/unreferenced css rules
       options: {
         develop: true, // Activates purging in npm run develop
