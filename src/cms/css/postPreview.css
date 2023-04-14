@@ -1,0 +1,8 @@
+/* According MDX gatsby-remark-images config */
+img {
+  height: auto;
+  width: 100%;
+  max-width: 570px;
+  display: block;
+  margin: 1em auto;
+}
